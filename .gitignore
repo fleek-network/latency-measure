@@ -1,0 +1,4 @@
+/target
+ts/node_modules
+ts/out
+ts/.env

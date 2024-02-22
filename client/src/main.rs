@@ -2,10 +2,9 @@ mod collect;
 
 use clap::Parser;
 use collect::Labeled;
-use futures::stream::FuturesOrdered;
-use futures::StreamExt;
 use measure::{MeasureRequest, MeasureResponse};
 use reqwest::ClientBuilder;
+use serde::{Deserialize, Serialize};
 
 #[derive(Parser)]
 pub struct CliArgs {
@@ -14,6 +13,9 @@ pub struct CliArgs {
 
     /// The url the measure service will be calling the http `get` method` on
     target_request_url: String,
+
+    /// The comparison url the measure service will be calling the http `get` method` on
+    comparison_url: Option<String>,
 
     #[clap(short, long)]
     average: bool,
@@ -40,19 +42,22 @@ pub struct CliArgs {
 async fn main() -> anyhow::Result<()> {
     let args = CliArgs::parse();
 
-    let _ = Runtime::new(args.times).start(args).await?;
+    let _ = Runtime::new(args.target_request_url.clone(), args.comparison_url.clone(), args.times).start(args).await?;
 
     Ok(())
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 struct Runtime {
-    results: Vec<Labeled>,
+    results: Labeled,
+    comparison_results: Option<Labeled>,
 }
 
 impl Runtime {
-    fn new(times: usize) -> Self {
+    fn new(target: String, maybe_comp: Option<String>, times: usize) -> Self {
         Runtime {
-            results: Vec::with_capacity(times),
+            results: Labeled::with_capacity(target, times),
+            comparison_results: maybe_comp.map(|comp| Labeled::with_capacity(comp, times)),
         }
     }
 
@@ -68,76 +73,81 @@ impl Runtime {
             times,
             delay,
             output_file,
-            flood,
-            ..
+            flood: _,
+            comparison_url: _
         } = args;
 
         let req = ClientBuilder::new()
             .build()?
-            .post(measure_ip)
+            .post(&measure_ip)
             .json(&MeasureRequest {
                 target: target_request_url.clone(),
             });
 
-        if flood {
-            let mut futs = (0..times)
-                .map(|_| {
-                    let cloned = req.try_clone().expect("cloneable request");
+        if let Some(ref mut empty) =  self.comparison_results {
+            let comparison_req = ClientBuilder::new()
+                    .build()?
+                    .post(&measure_ip)
+                    .json(&MeasureRequest {
+                        target: empty.label.clone(),
+                    });
 
-                    tokio::spawn(
-                        async move { cloned.send().await?.json::<MeasureResponse>().await },
-                    )
-                })
-                .collect::<FuturesOrdered<_>>();
+                Self::measure(empty, comparison_req, times, delay).await?;
+        }
 
-            while let Some(res) = futs.next().await {
-                match res {
-                    Ok(res) => match res {
-                        Ok(res) => {
-                            let labeled = Labeled::new(res, "flood".to_string());
-                            labeled.print();
-                            self.results.push(labeled);
-                        }
-                        Err(e) => {
-                            println!("network error: {}", e);
-                        }
-                    },
-                    Err(e) => {
-                        println!("failed to join handle: {}", e);
-                    }
-                }
-            }
+        Self::measure(&mut self.results, req, times, delay).await?;
+
+        if let Some(ref comp) = self.comparison_results {
+            Labeled::print_comped(&self.results, comp);
         } else {
-            for i in 0..times {
-                let cloned = req.try_clone().expect("cloneable request");
-
-                let res = cloned.send().await?.json::<MeasureResponse>().await?;
-
-                let labeled = Labeled::new(res, i.to_string());
-                labeled.print();
-                self.results.push(labeled);
-
-                tokio::time::sleep(tokio::time::Duration::from_millis(delay as u64)).await;
-            }
+            self.results.print();
         }
 
         if average {
-            let summed = Labeled::average(&self.results, times);
+            let target = Labeled::average(&self.results);
+            let comp = self.comparison_results.as_ref().map(|comp| Labeled::average(comp));
 
-            let labeled = Labeled::new(summed, "average".to_string());
-            labeled.print();
-            self.results.push(labeled);
+            print_average(self.results.label.clone(), target);
+
+            if let Some(comp) = comp {
+                print_average(self.comparison_results.as_ref().unwrap().label.clone(), comp);
+            }
         }
 
         if let Some(output_file) = output_file {
             if let Some(parent) = std::path::Path::new(&output_file).parent() {
                 std::fs::create_dir_all(parent)?;
             }
+
             let mut file = std::fs::File::create(output_file)?;
 
-            serde_json::to_writer(&mut file, &self.results)?;
+            serde_json::to_writer(&mut file, &self)?;
+        }
+
+        Ok(())
+    }
+
+    async fn measure(
+        buf: &mut Vec<MeasureResponse>,
+        req: reqwest::RequestBuilder,
+        times: usize,
+        delay: usize,
+    ) -> anyhow::Result<()> {
+        for _ in 0..times {
+            let cloned = req.try_clone().expect("cloneable request");
+
+            let res = cloned.send().await?.json::<MeasureResponse>().await?;
+            
+            buf.push(res);
+
+            tokio::time::sleep(tokio::time::Duration::from_millis(delay as u64)).await;
         }
 
         Ok(())
     }
 }
+
+fn print_average(label: String, measure: MeasureResponse) {
+    println!("URL: {:#?}", label);
+    println!("Average: {}ms", measure.ttfb_duration.as_millis());
+} 

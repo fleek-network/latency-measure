@@ -12,8 +12,8 @@ Deploy ec2 instances across the world, setup the service, and execute TTFB recor
 All crates have `cargo run -- --help` for usage
 
 ### Deploy: 
-You will need to install the aws-cdk cli to your machine, set your env after you can use ts/deploy.sh, 
-this will automatically deploy the service to the instances as a system service and expose port 3000
+You will need to install the aws-cdk cli to your machine and set your ts/.env after you can use ts/deploy.sh, 
+this will automatically deploy the service to the ec2 instances as a system service and expose port 3000
 
 ```
     yarn global add aws-cdk
@@ -26,7 +26,7 @@ this will automatically deploy the service to the instances as a system service 
 To run the benchmarks against a url and deployed EC2 instances from above use the following commands, after your scores will be placed in the newly created 'scores' directory, as well they will be printed to the 
 ```
     chmod +x run.sh
-    ./run.sh <url> <cli-args>
+    ./test-against-deployed-ec2.sh <url> <cli-args>
 ```
 
 otherwise you can just run the client/server directly configuring the ip, by just starting the [Service](service/) 
@@ -39,37 +39,7 @@ The data is written in human friendly format to stdout throught the execution, h
 
 The names of the files are the ip addresses of the ec2 instances that measured the ttfb.
 
-An exmaple of viewing some of this data is:
-Getting all ttfb durations (nanos -> secs + secs)
-`ls -A1 scores-123123123 | xargs -t -I{}  jq '.[].inner | .ttfb_duration.nanos/1e9 + ttfb_duration.secs' scores-123123123/{}`
-
-Example Object
+Example JSON Object
 ```json
-{
-  "label": "6",
-  "inner": {
-    // the ip address of the server fulfilling the request
-    "ip": "x.x.x.x",
-    "dns_lookup_duration": {
-      "secs": 0,
-      "nanos": 307913
-    },
-    "tcp_connect_duration": {
-      "secs": 0,
-      "nanos": 7250313
-    },
-    "http_get_send_duration": {
-      "secs": 0,
-      "nanos": 3860
-    },
-    "ttfb_duration": {
-      "secs": 0,
-      "nanos": 23473720
-    },
-    "tls_handshake_duration": {
-      "secs": 0,
-      "nanos": 7736479
-    }
-  }
-}
+
 ```

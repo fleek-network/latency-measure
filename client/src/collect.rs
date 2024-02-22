@@ -1,16 +1,15 @@
-use std::{net::{IpAddr, Ipv4Addr}, ops::{Deref, DerefMut}};
 use measure::MeasureResponse;
 use serde::{Deserialize, Serialize};
+use std::ops::{Deref, DerefMut};
 
-
-fn average(items: &Vec<impl Deref<Target = MeasureResponse>>, times: usize) -> MeasureResponse {
+fn average(items: &impl Deref<Target = Vec<MeasureResponse>>, times: usize) -> MeasureResponse {
     let starting = MeasureResponse {
         dns_lookup_duration: Some(Default::default()),
         tcp_connect_duration: Default::default(),
         http_get_send_duration: Default::default(),
         ttfb_duration: Default::default(),
         tls_handshake_duration: Some(Default::default()),
-        ip: String::new()
+        ip: String::new(),
     };
 
     let mut summed = items.iter().fold(starting, |mut init, val| {
@@ -52,29 +51,51 @@ fn average(items: &Vec<impl Deref<Target = MeasureResponse>>, times: usize) -> M
     summed
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Labeled {
-    label: String,
-    inner: MeasureResponse,
+    pub label: String,
+    inner: Vec<MeasureResponse>,
 }
 
 impl Labeled {
     pub fn print(&self) {
-        println!("{:#?}", self);
+        println!("-----------------------------------------------------");
+        println!("URL: {:#?}", self.label);
+        println!("-----------------------------------------------------");
+        for (i, item) in self.inner.iter().enumerate() {
+            println!("{i}: {}ms ", item.ttfb_duration.as_millis());
+        }
     }
 
-    pub fn new(inner: MeasureResponse, label: String) -> Self {
+    pub fn print_comped(first: &Self, second: &Self) {
+        println!("-----------------------------------------------------");
+        println!("URL: {:#?}", first.label);
+        println!("vs");
+        println!("URL: {:#?}", second.label);
+        println!("-----------------------------------------------------");
+        for (i, (f, s)) in first.iter().zip(second.iter()).enumerate() {
+            println!("{}:  {}ms            vs              {}ms", i, f.ttfb_duration.as_millis(), s.ttfb_duration.as_millis());
+        }
+    }
+
+    pub fn new(inner: Vec<MeasureResponse>, label: String) -> Self {
         Self { label, inner }
     }
 
-    pub fn average(items: &Vec<Self>, times: usize) -> MeasureResponse {
-        average(&items, times)
+    pub fn with_capacity(label: String, capacity: usize) -> Self {
+        Self {
+            label,
+            inner: Vec::with_capacity(capacity),
+        }
+    }
+
+    pub fn average(&self) -> MeasureResponse {
+        average(self, self.inner.len())
     }
 }
 
 impl Deref for Labeled {
-    type Target = MeasureResponse;
+    type Target = Vec<MeasureResponse>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use std::{net::{IpAddr, Ipv4Addr}, ops::{Deref, DerefMut}};
 use measure::MeasureResponse;
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +10,7 @@ fn average(items: &Vec<impl Deref<Target = MeasureResponse>>, times: usize) -> M
         http_get_send_duration: Default::default(),
         ttfb_duration: Default::default(),
         tls_handshake_duration: Some(Default::default()),
+        ip: String::new()
     };
 
     let mut summed = items.iter().fold(starting, |mut init, val| {

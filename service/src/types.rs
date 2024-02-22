@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::{net::IpAddr, time::Duration};
 use thiserror::Error;
 use ttfb::{TtfbError, TtfbOutcome};
 
@@ -14,6 +14,7 @@ pub struct MeasureRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeasureResponse {
+    pub ip: String,
     pub dns_lookup_duration: Option<Duration>,
     pub tcp_connect_duration: Duration,
     pub http_get_send_duration: Duration,
@@ -32,6 +33,7 @@ pub enum MeasureError {
 impl From<TtfbOutcome> for MeasureResponse {
     fn from(outcome: TtfbOutcome) -> Self {
         MeasureResponse {
+            ip: outcome.ip_addr().to_string(),
             dns_lookup_duration: outcome.dns_lookup_duration().map(|d| d.relative()),
             tcp_connect_duration: outcome.tcp_connect_duration().relative(),
             http_get_send_duration: outcome.http_get_send_duration().relative(),

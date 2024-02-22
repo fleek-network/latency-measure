@@ -2,3 +2,7 @@
 ts/node_modules
 ts/out
 ts/.env
+scores/
+ts/cdk.out/
+ts/cdk.context.json
+ts/outputs.json

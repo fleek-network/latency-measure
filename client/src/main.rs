@@ -18,8 +18,8 @@ pub struct CliArgs {
     #[clap(short, long)]
     average: bool,
 
-    /// The number of times to get a latencty measurement from node
-    #[clap(short, long, default_value_t = 100)]
+    /// The number of times to get a latencty measurement from service
+    #[clap(short, long, default_value_t = 10)]
     times: usize,
 
     /// The delay in milliseconds between each measurement
@@ -130,6 +130,9 @@ impl Runtime {
         }
 
         if let Some(output_file) = output_file {
+            if let Some(parent) = std::path::Path::new(&output_file).parent() {
+                std::fs::create_dir_all(parent)?;
+            }
             let mut file = std::fs::File::create(output_file)?;
 
             serde_json::to_writer(&mut file, &self.results)?;

@@ -1,17 +1,16 @@
 [workspace]
 
 members = [
-    "measure",
-    "orchestrator",
+    "client",
+    "service",
 ]
 
 default-members = [
-    "measure",
-    "orchestrator",
+    "client",
+    "service",
 ]
 
-resolver = "2"
-
+workspace.resolver = "2"
 
 [workspace.dependencies]
 tokio = { version = "1.36.0", features = ["full"] }

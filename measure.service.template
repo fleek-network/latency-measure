@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Restart=always
 RestartSec=1
-ExecStart={REPLACE_WITH_PATH_TO_BIN}
+ExecStart=REPLACE_WITH_PATH_TO_BIN
 
 [Install]
 WantedBy=multi-user.target

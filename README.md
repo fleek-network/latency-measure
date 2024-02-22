@@ -1,18 +1,20 @@
 ## Overview
+
 Deploy ec2 instances across the world, setup the service, and execute TTFB recording the scores.
 
 - [Service](service/)
-    - The binary being deployed to the EC2 instances, sets up a http server that runs arbitrary get requests and reports the TTFB.
+  - The binary being deployed to the EC2 instances, sets up a http server that runs arbitrary get requests and reports the TTFB.
 - [Client](client/)
-    - In charge of sending requests to the EC2 instances and the lambda comparison and recording them to the db
-    - Can do concurrent or sequential requests
+  - In charge of sending requests to the EC2 instances and the lambda comparison and recording them to the db
+  - Can do concurrent or sequential requests
 - [TS](ts/)
-    - The deployment script for the EC2 instances in various geographic locations, and spawns a [Service](service/) system service and exposes port 3000
+  - The deployment script for the EC2 instances in various geographic locations, and spawns a [Service](service/) system service and exposes port 3000
 
 All crates have `cargo run -- --help` for usage
 
-### Deploy: 
-You will need to install the aws-cdk cli to your machine and set your ts/.env after you can use ts/deploy.sh, 
+### Deploy:
+
+You will need to install the aws-cdk cli to your machine and set your ts/.env after you can use ts/deploy.sh,
 this will automatically deploy the service to the ec2 instances as a system service and expose port 3000
 
 ```
@@ -22,24 +24,85 @@ this will automatically deploy the service to the ec2 instances as a system serv
 ```
 
 ### Run:
+
 [cli-args](client/src/main.rs#L11)
-To run the benchmarks against a url and deployed EC2 instances from above use the following commands, after your scores will be placed in the newly created 'scores' directory, as well they will be printed to the 
+To run the benchmarks against a url and the newly deployed EC2 instances from above use the following commands, after your scores will be placed in the newly created 'scores' directory, as well they will be printed to the
+
 ```
     chmod +x run.sh
-    ./test-against-deployed-ec2.sh <url> <cli-args>
+    ./test-against-deployed-ec2.sh <url> [comp-url] [cli-args]
 ```
 
-otherwise you can just run the client/server directly configuring the ip, by just starting the [Service](service/) 
+otherwise you can just run the client/server directly configuring the ip, by just starting the [Service](service/)
 and using the [Client](client/) against that
 
 see `cargo run -- --help` for more infomation on either crate
 
 ### Results:
-The data is written in human friendly format to stdout throught the execution, however by default the `run` script writes JSON files per IP in the `scores-<timestamp>` directory.
+
+The data is written in human friendly format to stdout throught the execution, however by default the `test-against-deployed-ec2` script writes JSON files per IP in the `scores-<timestamp>` directory.
 
 The names of the files are the ip addresses of the ec2 instances that measured the ttfb.
 
 Example JSON Object
-```json
 
+```json
+{
+  "results": {
+    "label": "target",
+    "inner": [
+      {
+        "ip": "0.0.0.0",
+        "dns_lookup_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "tcp_connect_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "http_get_send_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "ttfb_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "tls_handshake_duration": {
+          "secs": 0,
+          "nanos": 0
+        }
+      }
+    ]
+  },
+  "comparison_results": {
+    "label": "comp",
+    "inner": [
+      {
+        "ip": "0.0.0.0",
+        "dns_lookup_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "tcp_connect_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "http_get_send_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "ttfb_duration": {
+          "secs": 0,
+          "nanos": 0
+        },
+        "tls_handshake_duration": {
+          "secs": 0,
+          "nanos": 0
+        }
+      }
+    ]
+  }
+}
 ```

@@ -63,7 +63,7 @@ impl Labeled {
         println!("URL: {:#?}", self.label);
         println!("-----------------------------------------------------");
         for (i, item) in self.inner.iter().enumerate() {
-            println!("{i}: {}ms ", item.ttfb_duration.as_millis());
+            println!("ttfb-{i}: {}ms ", item.ttfb_duration.as_millis());
         }
     }
 
@@ -74,7 +74,7 @@ impl Labeled {
         println!("URL: {:#?}", second.label);
         println!("-----------------------------------------------------");
         for (i, (f, s)) in first.iter().zip(second.iter()).enumerate() {
-            println!("{}:  {}ms            vs              {}ms", i, f.ttfb_duration.as_millis(), s.ttfb_duration.as_millis());
+            println!("ttfb-{i}:  {}ms            vs              {}ms", f.ttfb_duration.as_millis(), s.ttfb_duration.as_millis());
         }
     }
 

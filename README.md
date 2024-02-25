@@ -1,6 +1,6 @@
 ## Overview
 
-Deploy ec2 instances across the world, setup the service, and execute TTFB recording the scores.
+Deploy ec2 instances across the world and record thier relative ttfb measurments
 
 - [Service](service/)
   - The binary being deployed to the EC2 instances, sets up a http server that runs arbitrary get requests and reports the TTFB.
@@ -26,76 +26,8 @@ this will automatically deploy the service to the ec2 instances as a system serv
 ### Run:
 
 [cli-args](client/src/main.rs#L11)
-To run the benchmarks against a the EC2 & Fleek function deployment, simply `cargo run` in the [Client](client/) directory and it will automatically 
-run against the deployment and the deployed function.
+To run the benchmarks against the deployed EC2 & an example Fleek function, simply `cargo run` in the [Client](client/) directory and it will automatically 
+run against the deployed values
 
-You can also do `cargo run -- --help` to see the CLI args, which have featrues such as a optional comparsion URL and configurable paramters.
+You can also do `cargo run -- --help` to see the CLI args, which have additional fewtures such as pretty print comparsions, saving the results as a json and other configurable paramters
 
-### Results:
-
-The data is written in human friendly format to stdout throught the execution, however by default the `test-against-deployed-ec2` script writes JSON files per IP in the `scores-<timestamp>` directory.
-
-The names of the files are the ip addresses of the ec2 instances that measured the ttfb.
-
-Example JSON Object
-
-```json
-{
-  "results": {
-    "label": "target",
-    "inner": [
-      {
-        "ip": "0.0.0.0",
-        "dns_lookup_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tcp_connect_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "http_get_send_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "ttfb_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tls_handshake_duration": {
-          "secs": 0,
-          "nanos": 0
-        }
-      }
-    ]
-  },
-  "comparison_results": {
-    "label": "comp",
-    "inner": [
-      {
-        "ip": "0.0.0.0",
-        "dns_lookup_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tcp_connect_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "http_get_send_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "ttfb_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tls_handshake_duration": {
-          "secs": 0,
-          "nanos": 0
-        }
-      }
-    ]
-  }
-}
-```

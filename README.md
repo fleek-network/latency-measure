@@ -26,17 +26,10 @@ this will automatically deploy the service to the ec2 instances as a system serv
 ### Run:
 
 [cli-args](client/src/main.rs#L11)
-To run the benchmarks against a url and the newly deployed EC2 instances from above use the following commands, after your scores will be placed in the newly created 'scores' directory, as well they will be printed to the
+To run the benchmarks against a the EC2 & Fleek function deployment, simply `cargo run` in the [Client](client/) directory and it will automatically 
+run against the deployment and the deployed function.
 
-```
-    chmod +x run.sh
-    ./test-against-deployed-ec2.sh <url> [comp-url] [cli-args]
-```
-
-otherwise you can just run the client/server directly configuring the ip, by just starting the [Service](service/)
-and using the [Client](client/) against that
-
-see `cargo run -- --help` for more infomation on either crate
+You can also do `cargo run -- --help` to see the CLI args, which have featrues such as a optional comparsion URL and configurable paramters.
 
 ### Results:
 

@@ -18,7 +18,7 @@ const deployFleekFunction = async () => {
         content: fleekFunction
     })
 
-await fs.writeFile("./ts/CID.txt", new TextEncoder().encode(result.cid));
+    await fs.writeFile("CID.txt", new TextEncoder().encode(result.cid), { flag: "w"});
 }
 
 deployFleekFunction();
@@ -37,8 +37,11 @@ const regions = [
     'sa-east-1', // sao paulo
 ];
 
+console.log({key: process.env.KEY_NAME})
+
 regions.forEach(region => {
     new AwsStackV2(app, `FleekNetworkTestStack-${region}`, {
+        keyName: process.env.KEY_NAME!,
         env: {
             account: process.env.AWS_ACCOUNT_ID,
             region: region,

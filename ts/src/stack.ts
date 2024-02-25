@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
-const instanceName = `Latency-Service`;
+const instanceName = `LatencyService`;
 
 type AwsStackV2Props = cdk.StackProps & {
   keyName?: string;
@@ -82,6 +82,7 @@ export class AwsStackV2 extends cdk.Stack {
       blockDevices: [rootVolume],
       propagateTagsToVolumeOnCreation: true,
       resourceSignalTimeout: cdk.Duration.minutes(15),
+      securityGroup: securityGroup,
     });
 
     const logicalId = instance.stack.getLogicalId(instance.node.defaultChild as cdk.CfnElement);
@@ -95,7 +96,7 @@ export class AwsStackV2 extends cdk.Stack {
       "rustup install stable",
       // install service
       "git clone https://github.com/fleek-network/latency-measure",
-      "cd latency-measure/measure && cargo install --path .",
+      "cd latency-measure/service && cargo install --path .",
       "cd ../ && cp measure.service.template /etc/systemd/system/measure.service",
       "sed -i 's|REPLACE_WITH_PATH_TO_BIN|/root/.cargo/bin/measure|g' /etc/systemd/system/measure.service",
       "sudo chmod 644 /etc/systemd/system/measure.service",
@@ -109,6 +110,6 @@ export class AwsStackV2 extends cdk.Stack {
       `python2 /usr/local/bin/cfn-signal -e $? --stack ${this.stackName} --resource ${logicalId} --region ${this.region}`,
     );
 
-    new cdk.CfnOutput(this, `instance: ${instanceName}`, { value: instance.instancePublicIp });
+    new cdk.CfnOutput(this, `instance${instanceName}`, { value: instance.instancePublicIp });
   }
 }

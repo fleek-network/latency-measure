@@ -12,7 +12,46 @@ Deploy ec2 instances across the world, setup the service, and execute TTFB recor
 
 All crates have `cargo run -- --help` for usage
 
-### Deploy:
+## 3rd Party Dependencies
+### Fleek Platform
+
+This tool will upload functions to IPFS using the Fleek Platform SDK.  For this you will need to do the following:
+
+1. Create an account at https://app.fleek.xyz/
+2. Create an API key using the Fleek CLI as per the instructions at https://docs.fleek.xyz/docs/SDK. Note you will need to create a `PersonalAccessTokenService` token type since this will be run from the backend.
+3. Set the following env var to use the Fleek API key
+
+`FLEEK_PAT=`
+
+### AWS
+
+This test also uses AWS for EC2 creation to run the clients from various regions.  As such you will need to create your own AWS account and then get an API key from there. Set the following environment variables to configure the AWS API keys.
+
+1. Create an account on AWS
+2. Create API keys to be used
+3. Add the following env vars
+
+```
+AWS_ACCOUNT_ID=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+```
+
+4. If this is your first time running the AWS CDK against your AWS account, you will need to call the bootstrap command for each region you want to operate this in. E.g., for US East 1 call `cdk bootstrap aws://<account number from step 1>/us-east-1`.
+
+5. Create an SSH key and make sure you upload it to each region so your script can use the same SSH key for the instances in different regions.
+
+Note, currently all of these variable must be set and this tool has not been testing using other forms of AWS API key confiuration like using the `.aws` directory.
+
+Other useful commands:
+
+```
+cdk deploy deploy this stack to your default AWS account/region
+cdk diff compare deployed stack with current state
+cdk synth emits the synthesized CloudFormation template
+```
+
+## Deploy:
 
 You will need to install the aws-cdk cli to your machine and set your ts/.env after you can use ts/deploy.sh,
 this will automatically deploy the service to the ec2 instances as a system service and expose port 3000
@@ -23,79 +62,10 @@ this will automatically deploy the service to the ec2 instances as a system serv
     ts/deploy.sh
 ```
 
-### Run:
+## Run:
 
 [cli-args](client/src/main.rs#L11)
 To run the benchmarks against a the EC2 & Fleek function deployment, simply `cargo run` in the [Client](client/) directory and it will automatically 
 run against the deployment and the deployed function.
 
 You can also do `cargo run -- --help` to see the CLI args, which have featrues such as a optional comparsion URL and configurable paramters.
-
-### Results:
-
-The data is written in human friendly format to stdout throught the execution, however by default the `test-against-deployed-ec2` script writes JSON files per IP in the `scores-<timestamp>` directory.
-
-The names of the files are the ip addresses of the ec2 instances that measured the ttfb.
-
-Example JSON Object
-
-```json
-{
-  "results": {
-    "label": "target",
-    "inner": [
-      {
-        "ip": "0.0.0.0",
-        "dns_lookup_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tcp_connect_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "http_get_send_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "ttfb_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tls_handshake_duration": {
-          "secs": 0,
-          "nanos": 0
-        }
-      }
-    ]
-  },
-  "comparison_results": {
-    "label": "comp",
-    "inner": [
-      {
-        "ip": "0.0.0.0",
-        "dns_lookup_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tcp_connect_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "http_get_send_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "ttfb_duration": {
-          "secs": 0,
-          "nanos": 0
-        },
-        "tls_handshake_duration": {
-          "secs": 0,
-          "nanos": 0
-        }
-      }
-    ]
-  }
-}
-```

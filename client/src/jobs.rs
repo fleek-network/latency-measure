@@ -27,7 +27,10 @@ impl CliArgs {
         Ok(Jobs {
             services: self.services.clone().unwrap_or(try_read_service_ips()?),
             comparison_url: self.comparison_url.clone(),
-            target_url: self.target_request_url.clone().unwrap_or(try_get_deployed_url()?),
+            target_url: self
+                .target_request_url
+                .clone()
+                .unwrap_or(try_get_deployed_url()?),
         })
     }
 }

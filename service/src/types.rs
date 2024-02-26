@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
-use std::{net::IpAddr, time::Duration};
+use std::time::Duration;
 use thiserror::Error;
 use ttfb::{TtfbError, TtfbOutcome};
 

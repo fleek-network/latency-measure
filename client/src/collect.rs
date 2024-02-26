@@ -1,6 +1,9 @@
 use measure::MeasureResponse;
 
-pub fn average<'a, I: Iterator<Item = &'a MeasureResponse>>(items: I, times: usize) -> MeasureResponse {
+pub fn average<'a, I: Iterator<Item = &'a MeasureResponse>>(
+    items: I,
+    times: usize,
+) -> MeasureResponse {
     let starting = MeasureResponse {
         dns_lookup_duration: Some(Default::default()),
         tcp_connect_duration: Default::default(),
@@ -35,7 +38,7 @@ pub fn average<'a, I: Iterator<Item = &'a MeasureResponse>>(items: I, times: usi
 
         init
     });
-    
+
     if let Some(dur) = summed.dns_lookup_duration {
         summed.dns_lookup_duration = Some(dur / times as u32);
     }

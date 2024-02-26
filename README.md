@@ -5,7 +5,7 @@ Deploy ec2 instances across the world and record thier relative ttfb measurments
 - [Service](service/)
   - The binary being deployed to the EC2 instances, sets up a http server that runs arbitrary get requests and reports the TTFB.
 - [Client](client/)
-  - In charge of sending requests to the EC2 instances and formatting and saving results
+  - In charge of sending requests to the service instances and formatting and saving results
 - [TS](ts/)
   - The deployment script for the EC2 instances in various geographic locations, and spawns a [Service](service/) system service on port 3000
 

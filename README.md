@@ -11,7 +11,7 @@ Deploy ec2 instances across the world and record thier relative ttfb measurments
 
 All crates have `cargo run -- --help` for usage
 
-## 3rd Party Dependencies
+## Required Dependencies
 ### Fleek Platform
 
 This tool will upload functions to IPFS using the Fleek Platform SDK.  For this you will need to do the following:
@@ -45,12 +45,12 @@ Note, currently all of these variable must be set and this tool has not been tes
 Other useful commands:
 
 ```
-cdk deploy deploy this stack to your default AWS account/region
-cdk diff compare deployed stack with current state
-cdk synth emits the synthesized CloudFormation template
+cdk deploy # deploy this stack to your default AWS account/region
+cdk diff   # compare deployed stack with current state
+cdk synth  # emits the synthesized CloudFormation template
 ```
 
-## Deploy:
+## Deploy
 
 You will need to install the aws-cdk cli to your machine and set your ts/.env after you can use ts/deploy.sh,
 this will automatically deploy the service to the ec2 instances as a system service and expose port 3000
@@ -61,10 +61,9 @@ this will automatically deploy the service to the ec2 instances as a system serv
     ts/deploy.sh
 ```
 
-## Run:
+## Run
 
-[cli-args](client/src/main.rs#L11)
 To run the benchmarks against the deployed EC2 & an example Fleek function, simply `cargo run` in the [Client](client/) directory and it will automatically 
-run against the deployed values
+run against the deployed values.
 
-You can also do `cargo run -- --help` to see the CLI args, which have featrues such as a optional comparsion URL and configurable paramters.
+You can also do `cargo run -- --help` to see the CLI args, which have featrues such as a optional comparsion URL and configurable paramters. For more information on the args, see [cli-args](client/src/main.rs#L11).

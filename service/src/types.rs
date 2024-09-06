@@ -42,6 +42,8 @@ pub enum MeasureError {
     #[allow(dead_code)]
     #[error("HTTP error: {0}")]
     HttpError(reqwest::StatusCode),
+    #[error("Bad request: {0}")]
+    BadRequest(String),
 }
 
 impl From<TtfbOutcome> for MeasureResponse {

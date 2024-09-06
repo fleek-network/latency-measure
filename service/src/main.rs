@@ -3,10 +3,9 @@ mod types;
 use std::time::{Duration, Instant};
 
 use axum::{routing::post, Json, Router};
-use measure::{
-    MeasureDurationRequest, MeasureError, MeasureRequest, MeasureResponse,
-};
+use measure::{MeasureDurationRequest, MeasureError, MeasureRequest, MeasureResponse};
 use reqwest::{Client, Method};
+use serde_json::Value;
 use tokio::task;
 use ttfb::ttfb;
 
@@ -49,6 +48,8 @@ async fn measure_duration(
 ) -> Result<Json<MeasureResponse>, MeasureError> {
     let client = Client::new();
 
+    client.get("http://fleek-test.network/services/0/ipfs/bafkreidfgseevm6bhqd7wsecqvq5b3kr5bqlje7nbbexfhqsl7mwhnzk3q").send().await?;
+
     let method: Method = match target.method.to_uppercase().as_str() {
         "GET" => Method::GET,
         "POST" => Method::POST,
@@ -66,7 +67,9 @@ async fn measure_duration(
     }
 
     if let Some(body) = target.body {
-        request_builder = request_builder.body(body);
+        let json_body: Value = serde_json::from_str(&body)
+            .map_err(|e| MeasureError::BadRequest(format!("Invalid JSON body: {}", e)))?;
+        request_builder = request_builder.body(json_body.to_string());
     }
 
     let start = Instant::now();

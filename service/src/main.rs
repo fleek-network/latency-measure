@@ -74,13 +74,18 @@ async fn measure_duration(
 
     let start = Instant::now();
     let response = request_builder.send().await;
-    let duration = start.elapsed();
 
     match response {
         Ok(response) => {
             if !response.status().is_success() {
                 return Err(MeasureError::HttpError(response.status()));
             }
+
+            let text = response.text().await.unwrap();
+            let duration = start.elapsed();
+        
+            println!("response: {:?}", text);
+            println!("duration: {:?}", duration);
 
             Ok(Json(MeasureResponse {
                 ip: "".to_string(),

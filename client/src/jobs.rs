@@ -30,6 +30,7 @@ struct Inner {
 
 impl CliArgs {
     pub fn jobs(&self) -> anyhow::Result<Jobs> {
+        println!("target_request_url: {:?}", self.target_request_url);
         Ok(Jobs {
             services: self.services.clone().unwrap_or(try_read_service_ips()?),
             target_method: self.target_request_method.clone().unwrap_or("GET".to_string()),
@@ -64,6 +65,7 @@ pub fn try_read_service_ips() -> anyhow::Result<Vec<String>> {
 }
 
 pub fn try_get_deployed_url() -> anyhow::Result<String> {
+    println!("trying to get deployed url");
     const CID: &str = "../ts/CID.txt";
 
     let cid =

@@ -19,3 +19,4 @@ thiserror = "1.0.57"
 ttfb = "1.10.0"
 tokio.workspace = true
 serde.workspace = true
+reqwest = "0.12.7"

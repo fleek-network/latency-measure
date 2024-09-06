@@ -11,6 +11,7 @@ pub fn average<'a, I: Iterator<Item = &'a MeasureResponse>>(
         ttfb_duration: Default::default(),
         tls_handshake_duration: Some(Default::default()),
         ip: String::new(),
+        overall_duration: Some(Default::default()),
     };
 
     let mut summed = items.fold(starting, |mut init, val| {
@@ -32,6 +33,14 @@ pub fn average<'a, I: Iterator<Item = &'a MeasureResponse>>(
             init.tls_handshake_duration = None;
         }
 
+        if let Some(dur) = val.overall_duration {
+            if init.overall_duration.is_some() {
+                init.overall_duration = Some(init.overall_duration.unwrap() + dur);
+            }
+        } else {
+            init.overall_duration = None;
+        }
+
         init.tcp_connect_duration += val.tcp_connect_duration;
         init.http_get_send_duration += val.http_get_send_duration;
         init.ttfb_duration += val.ttfb_duration;
@@ -45,6 +54,10 @@ pub fn average<'a, I: Iterator<Item = &'a MeasureResponse>>(
 
     if let Some(dur) = summed.tls_handshake_duration {
         summed.tls_handshake_duration = Some(dur / times as u32);
+    }
+
+    if let Some(dur) = summed.overall_duration {
+        summed.overall_duration = Some(dur / times as u32);
     }
 
     summed.tcp_connect_duration /= times as u32;

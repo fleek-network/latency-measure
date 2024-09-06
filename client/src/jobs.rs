@@ -12,6 +12,12 @@ pub struct Jobs {
     pub services: Vec<String>,
     // The parsed url of the target request
     pub target_url: String,
+    // The parsed method of the target request
+    pub target_method: String,
+    // The parsed body of the target request
+    pub target_body: Option<String>,
+    // The parsed headers of the target request
+    pub target_headers: Option<HashMap<String, String>>,
     // The parsed url of the comparison request
     pub comparison_url: Option<String>,
 }
@@ -26,6 +32,9 @@ impl CliArgs {
     pub fn jobs(&self) -> anyhow::Result<Jobs> {
         Ok(Jobs {
             services: self.services.clone().unwrap_or(try_read_service_ips()?),
+            target_method: self.target_request_method.clone().unwrap_or("GET".to_string()),
+            target_body: self.target_request_body.clone(),
+            target_headers: self.target_request_headers.clone().map(|v| v.into_iter().collect()),
             comparison_url: self.comparison_url.clone(),
             target_url: self
                 .target_request_url

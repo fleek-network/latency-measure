@@ -1,20 +1,30 @@
 mod collect;
 mod jobs;
 
-use std::{collections::HashMap, fmt::Write};
+use std::{collections::HashMap, error::Error, fmt::Write};
 
 use clap::Parser;
 use indicatif::{ProgressState, ProgressStyle};
 use jobs::Jobs;
-use measure::{MeasureRequest, MeasureResponse};
-use reqwest::ClientBuilder;
+use measure::{MeasureDurationRequest, MeasureRequest, MeasureResponse};
+use reqwest::{ClientBuilder, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use tabled::builder::Builder;
 
 #[derive(Parser)]
 pub struct CliArgs {
-    /// The url the measure service will be calling the http `get` method` on
+    /// The url the measure service will be making the http request to
     target_request_url: Option<String>,
+
+    /// The HTTP method for the http request the measure service will be making to the target url
+    target_request_method: Option<String>,
+
+    /// The HTTP body for the http request the measure service will be making to the target url
+    target_request_body: Option<String>,
+
+    /// The HTTP headers for the http request the measure service will be making to the target url
+    #[arg(value_parser = parse_key_val::<String, String>)]
+    target_request_headers: Option<Vec<(String, String)>>,
 
     /// The comparison url the measure service will be calling the http `get` method` on
     #[clap(long = "comp")]
@@ -44,6 +54,20 @@ pub struct CliArgs {
     /// and ignores the delay param
     #[clap(long)]
     flood: bool,
+}
+
+/// Parse a single key-value pair
+fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
+where
+    T: std::str::FromStr,
+    T::Err: Error + Send + Sync + 'static,
+    U: std::str::FromStr,
+    U::Err: Error + Send + Sync + 'static,
+{
+    let pos = s
+        .find('=')
+        .ok_or_else(|| format!("invalid KEY=value: no `=` found in `{s}`"))?;
+    Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
 }
 
 #[tokio::main]
@@ -91,13 +115,23 @@ impl Runtime {
         let Jobs {
             services,
             target_url,
+            target_method,
+            target_body,
+            target_headers,
             comparison_url,
         } = self.jobs.clone();
 
         for service_ip in services {
             println!("running for: {}", service_ip);
-            self.run(service_ip, target_url.clone(), comparison_url.clone())
-                .await?;
+            self.run(
+                service_ip,
+                target_url.clone(),
+                target_method.clone(),
+                target_body.clone(),
+                target_headers.clone(),
+                comparison_url.clone(),
+            )
+            .await?;
         }
 
         let output = self.output();
@@ -152,14 +186,22 @@ impl Runtime {
         &mut self,
         service_ip: String,
         target_url: String,
+        target_method: String,
+        target_body: Option<String>,
+        target_headers: Option<HashMap<String, String>>,
         maybe_comp: Option<String>,
     ) -> anyhow::Result<()> {
-        let req = ClientBuilder::new()
-            .build()?
-            .post(&service_ip)
-            .json(&MeasureRequest {
-                target: target_url.clone(),
-            });
+        if target_body.is_some() && target_method != "POST" {
+            return Err(anyhow::anyhow!("body is only supported for POST requests"));
+        }
+
+        let req = make_request(
+            &service_ip,
+            &target_url,
+            &target_method,
+            &target_headers,
+            &target_body,
+        )?;
 
         println!("measuring target ttfb");
         self.results.insert(
@@ -168,13 +210,13 @@ impl Runtime {
         );
 
         if let Some(ref url) = maybe_comp {
-            let comparison_req =
-                ClientBuilder::new()
-                    .build()?
-                    .post(&service_ip)
-                    .json(&MeasureRequest {
-                        target: url.clone(),
-                    });
+            let comparison_req = make_request(
+                &service_ip,
+                &url,
+                &target_method,
+                &target_headers,
+                &target_body,
+            )?;
 
             println!("measuring comparison ttfb");
             self.comparison_results
@@ -249,6 +291,32 @@ impl Runtime {
             comparison_results: self.comparison_results.clone(),
         }
     }
+}
+
+fn make_request(
+    service_ip: &String,
+    target_url: &String,
+    target_method: &String,
+    target_headers: &Option<HashMap<String, String>>,
+    target_body: &Option<String>,
+) -> Result<RequestBuilder, reqwest::Error> {
+    let req = ClientBuilder::new().build()?;
+    let req = if target_method != "GET" {
+        req.post(format!("{0}/duration", &service_ip))
+            .json(&MeasureDurationRequest {
+                target: target_url.clone(),
+                method: target_method.clone(),
+                headers: target_headers.clone(),
+                body: target_body.clone(),
+            })
+    } else {
+        req.post(format!("{0}/ttfb", &service_ip))
+            .json(&MeasureRequest {
+                target: target_url.clone(),
+            })
+    };
+
+    Ok(req)
 }
 
 fn print_average(label: String, measure: MeasureResponse) {

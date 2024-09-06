@@ -46,7 +46,6 @@ async fn measure_ttfb(
 async fn measure_duration(
     Json(target): Json<MeasureDurationRequest>,
 ) -> Result<Json<MeasureResponse>, MeasureError> {
-    dbg!(&target);
     let client = Client::new();
 
     client.get("http://fleek-test.network/services/0/ipfs/bafkreidfgseevm6bhqd7wsecqvq5b3kr5bqlje7nbbexfhqsl7mwhnzk3q").send().await?;
@@ -62,24 +61,19 @@ async fn measure_duration(
     let mut request_builder = client.request(method, &target.target);
 
     if let Some(headers) = target.headers {
-        dbg!(&headers);
-
         for (key, value) in headers {
             request_builder = request_builder.header(key, value);
         }
     }
 
     if let Some(body) = target.body {
-        dbg!(&body);
         let json_body: Value = serde_json::from_str(&body)
             .map_err(|e| MeasureError::BadRequest(format!("Invalid JSON body: {}", e)))?;
         request_builder = request_builder.body(json_body.to_string());
     }
 
     let start = Instant::now();
-    dbg!(&request_builder);
     let response = request_builder.send().await;
-    dbg!(&response);
     let duration = start.elapsed();
 
     match response {
@@ -88,7 +82,6 @@ async fn measure_duration(
                 return Err(MeasureError::HttpError(response.status()));
             }
 
-            dbg!(&response);
             Ok(Json(MeasureResponse {
                 ip: "".to_string(),
                 dns_lookup_duration: None,

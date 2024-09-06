@@ -49,6 +49,8 @@ async fn measure_duration(
     dbg!(&target);
     let client = Client::new();
 
+    client.get("http://fleek-test.network/services/0/ipfs/bafkreidfgseevm6bhqd7wsecqvq5b3kr5bqlje7nbbexfhqsl7mwhnzk3q").send().await?;
+
     let method: Method = match target.method.to_uppercase().as_str() {
         "GET" => Method::GET,
         "POST" => Method::POST,

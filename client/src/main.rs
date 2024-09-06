@@ -152,7 +152,7 @@ impl Runtime {
                 std::iter::once(target_url.clone()).chain(
                     results
                         .iter()
-                        .map(|res| format!("{}ms", res.ttfb_duration.as_millis())),
+                        .map(|res| format!("{}ms", res.overall_duration.unwrap().as_millis())),
                 ),
             );
 
@@ -163,7 +163,7 @@ impl Runtime {
                     std::iter::once(comparison_url.as_ref().expect("comparison url").clone())
                         .chain(
                             comp.iter()
-                                .map(|res| format!("{}ms", res.ttfb_duration.as_millis())),
+                                .map(|res| format!("{}ms", res.overall_duration.unwrap().as_millis())),
                         ),
                 );
             }
@@ -325,4 +325,5 @@ fn make_request(
 fn print_average(label: String, measure: MeasureResponse) {
     println!("URL: {:#?}", label);
     println!("Average: {}ms", measure.ttfb_duration.as_millis());
+    println!("Overall: {}ms", measure.overall_duration.unwrap().as_millis());
 }

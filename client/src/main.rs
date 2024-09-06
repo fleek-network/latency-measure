@@ -276,8 +276,6 @@ impl Runtime {
                 .try_clone()
                 .ok_or(anyhow::anyhow!("failed to clone request"))?;
 
-            dbg!(&cloned);
-
             let res = cloned.send().await?.json::<MeasureResponse>().await?;
 
             buf.push(res);
@@ -305,8 +303,6 @@ fn make_request(
     target_headers: &Option<HashMap<String, String>>,
     target_body: &Option<String>,
 ) -> Result<RequestBuilder, reqwest::Error> {
-    dbg!(&target_body);
-
     let req = ClientBuilder::new().build()?;
     let req = if target_method != "GET" {
         req.post(format!("{0}/duration", &service_ip))

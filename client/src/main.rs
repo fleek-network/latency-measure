@@ -17,13 +17,16 @@ pub struct CliArgs {
     target_request_url: Option<String>,
 
     /// The HTTP method for the http request the measure service will be making to the target url
+    #[clap(long)]
     target_request_method: Option<String>,
 
     /// The HTTP body for the http request the measure service will be making to the target url
+    #[clap(long)]
     target_request_body: Option<String>,
 
     /// The HTTP headers for the http request the measure service will be making to the target url
     #[arg(value_parser = parse_key_val::<String, String>)]
+    #[clap(long)]
     target_request_headers: Option<Vec<(String, String)>>,
 
     /// The comparison url the measure service will be calling the http `get` method` on
